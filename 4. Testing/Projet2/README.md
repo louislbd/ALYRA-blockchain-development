@@ -1,57 +1,83 @@
-# Sample Hardhat 3 Beta Project (`mocha` and `ethers`)
+## Tests unitaires du smart contract VotingPlus.sol
+Ce projet fournit une suite complète de tests unitaires écrits avec Hardhat et Chai pour valider le fonctionnement du système de vote implémenté dans le smart contract Voting.sol.
+L’objectif est de vérifier le bon déroulement du processus de vote, la gestion du workflow, la robustesse des mécanismes d’enregistrement et les résultats de tally, en suivant les consignes du devoir.
 
-This project showcases a Hardhat 3 Beta project using `mocha` for tests and the `ethers` library for Ethereum interactions.
+### Organisation des tests
+Le fichier de test principal est test/VotingPlus.ts, organisé en plusieurs bloc :
 
-To learn more about the Hardhat 3 Beta, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3 Beta](https://hardhat.org/hardhat3-beta-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+- getters : Tests sur les getters du contrat (vérification du statut initial).
 
-## Project Overview
+- Voter registration : Ajout, suppression, droits, events et erreurs liés à l’enregistrement des votants.
 
-This example project includes:
+- Proposal management : Ajout de propositions, émission d’événements et validation des entrées.
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using `mocha` and ethers.js
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+- Voting session : Possibilités de vote, enregistrement du vote, gestion des erreurs (vote multiple, index hors limite), events.
 
-## Usage
+- Workflow management : Transition d’états, vérification séquentielle, contrôle des transitions invalides et émission d’événement.
 
-### Running Tests
+- Vote tallying : Vérification du décompte des votes, gestion des égalités et émission d’événements.
 
-To run all the tests in the project, execute the following command:
+- Vote tallying (draw) : Tests approfondis sur la sélection des gagnants selon différents scénarios (victoire unique, égalité, tableau vide, tous à zéro).
 
-```shell
+---
+
+### Principaux scénarios et logiques vérifiées
+Etat initial : Le workflow commence toujours à RegisteringVoters.
+
+- Gestion des votants : L’owner peut inscrire/supprimer un votant ; tentative par non-owner ou suppression d’un non-inscrit provoque un revert.
+
+- Propositions : Un votant inscrit peut proposer ; description vide provoque un revert ; chaque ajout déclenche un événement.
+
+- Session de vote : Un votant inscrit peut voter sur une proposition existante ; interdiction de voter plusieurs fois ; index non-existant provoque un revert ; chaque vote déclenche un événement.
+
+- Transitions du workflow : Changements d’état successifs permis ; toute transition non conforme déclenche un revert ; chaque changement déclenche un événement.
+
+- Tally / décompte : Une fois la session terminée, le tally identifie bien le(s) gagnant(s) selon le nombre de votes ; les égalités sont gérées ; aucun proposal ou votes à zéro sont couverts.
+
+- Gestion des erreurs : Chaque revert, chaque événement et chaque changement d’état est systématiquement testé (y compris pour les cas limites).
+
+---
+
+### Couverture
+La suite de tests couvre :
+
+- Tous les modifiers, droits et transitions possibles.
+
+- Tous les cas attendus de la logique métier : succès et échecs.
+
+- Tous les événements émis.
+
+- Les cas limites du tally, notamment égalités et array vide.
+
+- La robustesse face aux erreurs et mauvais usages.
+
+---
+
+### Outils & exécution
+Framework de test : Hardhat
+
+Assert/Matchers : Chai, via Hardhat
+
+Commandes principales :
+
+```bash
 npx hardhat test
+npx hardhat test --coverage
 ```
 
-You can also selectively run the Solidity or `mocha` tests:
+---
 
-```shell
-npx hardhat test solidity
-npx hardhat test mocha
+### Pour lancer la suite de tests
+```bash
+git clone ...
+cd <répertoire>
+npm install
+npx hardhat test
+npx hardhat test --coverage
 ```
 
-### Make a deployment to Sepolia
+---
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+### Conclusion
+Ce dossier de tests permet d’assurer la robustesse, la sécurité et la fiabilité du système Voting sur toutes ses fonctionnalités attendues, tout en garantissant une couverture adaptée à la consigne du devoir.
 
-To run the deployment to a local chain:
-
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
-```
-
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
-
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
-
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
-
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
-```
-
-After setting the variable, you can run the deployment with the Sepolia network:
-
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
