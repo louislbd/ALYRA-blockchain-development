@@ -21,7 +21,6 @@ const nextConfig: NextConfig = {
       config.resolve.alias = config.resolve.alias || {};
 
       for (const name of aliasesToDisable) {
-        // Mark these modules as false so bundlers skip them for client
         config.resolve.alias[name] = false;
       }
 
@@ -36,6 +35,7 @@ const nextConfig: NextConfig = {
 
     return config;
   },
+  turbopack: {},
 };
 
 export default nextConfig;
